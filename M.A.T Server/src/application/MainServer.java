@@ -93,7 +93,7 @@ public class MainServer extends AbstractServer
 	
 	
 	
-	String query = "select Name, Role, isLogin from users where ID='" + id + "' AND Password='"+password+"';";
+	String query = "select Name, Role, isLogin from users where ID='" + id + "' AND Password = '" + password +"';";
 	
 	try {
 		stmt = DBConn.createStatement();
