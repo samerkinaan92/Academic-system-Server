@@ -247,6 +247,7 @@ public class MainServer extends AbstractServer
 	//open log events controller
 	  	try {
 	  		Stage primaryStage = new Stage();
+	  		primaryStage.setTitle("MainServer log system");
 	  		primaryStage.getIcons().add(new Image("/server_earth.png"));
 	  	  	FXMLLoader loader = new FXMLLoader();
 	  	  	Pane root;
@@ -265,3 +266,4 @@ public class MainServer extends AbstractServer
   }
   
 }
+//End of MainServer class
