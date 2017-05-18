@@ -78,6 +78,10 @@ public class MainServer extends AbstractServer
 		updateQuery(clientMsg, client);
 	}else if(clientMsg.get("msgType").equals("Login")){
 		login(clientMsg,client);
+	}else if(clientMsg.get("msgType").equals("delete")){
+		updateQuery(clientMsg, client);
+	}else if(clientMsg.get("msgType").equals("insert")){
+		updateQuery(clientMsg, client);
 	}
   }
   
@@ -149,8 +153,7 @@ public class MainServer extends AbstractServer
 	  try {		  
 		  client.sendToClient(arrayList);
 	  } catch (IOException e) {
-		// TODO Auto-generated catch block
-		  System.out.println("\nCould not sent message to client.");
+		  logController.showMsg("\nCould not sent message to client.");
 	  }
   }
   
@@ -187,6 +190,16 @@ public class MainServer extends AbstractServer
       ("Server has stopped listening for connections.");
   }
   
+  @Override
+  protected void clientConnected(ConnectionToClient client) {
+	  logController.showMsg("Client: " + client + " has connected");
+  }
+  
+  
+  @Override
+  synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  logController.showMsg("Client: " + client + " has been disconnected");
+  }
   //Class methods ***************************************************
   
   /**
@@ -234,7 +247,6 @@ public class MainServer extends AbstractServer
 	//open log events controller
 	  	try {
 	  		Stage primaryStage = new Stage();
-	  		primaryStage.setTitle("EchoServer log system");
 	  		primaryStage.getIcons().add(new Image("/server_earth.png"));
 	  	  	FXMLLoader loader = new FXMLLoader();
 	  	  	Pane root;
@@ -253,4 +265,3 @@ public class MainServer extends AbstractServer
   }
   
 }
-//End of EchoServer class
