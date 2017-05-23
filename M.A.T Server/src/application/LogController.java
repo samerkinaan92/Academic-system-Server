@@ -1,5 +1,7 @@
 package application;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 
 import javafx.event.ActionEvent;
@@ -15,6 +17,18 @@ public class LogController {
 
     @FXML // fx:id="exitBtn"
     private Button exitBtn; // Value injected by FXMLLoader
+    
+    @FXML // fx:id="serverIp"
+    private Label serverIp; // Value injected by FXMLLoader
+    
+    public void setIp(){
+    	try {
+			serverIp.setText("Server ip: " + Inet4Address.getLocalHost().getHostAddress());
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 
     @FXML
     void exit(ActionEvent event) {

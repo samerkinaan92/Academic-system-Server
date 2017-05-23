@@ -72,12 +72,12 @@ public class MainServer extends AbstractServer
 
   
   	//check the msg type
-	if(clientMsg.get("msgType").equals("select")){
+  	if(clientMsg.get("msgType").equals("Login")){
+		login(clientMsg,client);
+  	}else if(clientMsg.get("msgType").equals("select")){
 		selectQuery(clientMsg, client);
 	}else if(clientMsg.get("msgType").equals("update")){
 		updateQuery(clientMsg, client);
-	}else if(clientMsg.get("msgType").equals("Login")){
-		login(clientMsg,client);
 	}else if(clientMsg.get("msgType").equals("delete")){
 		updateQuery(clientMsg, client);
 	}else if(clientMsg.get("msgType").equals("insert")){
@@ -257,6 +257,7 @@ public class MainServer extends AbstractServer
 	  	  	scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 	  	  	
 	  	  	logController = loader.getController();
+	  	  	logController.setIp();
 	  	  	primaryStage.setScene(scene);	
 	  	  	primaryStage.show();
 	  	} catch (IOException e) {
