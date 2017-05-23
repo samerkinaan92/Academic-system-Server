@@ -1,11 +1,14 @@
 package application;
 	
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -15,10 +18,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.layout.GridPane;
 
 
-public class MainServerGUI extends Application {
+public class MainServerGUI extends Application implements Initializable {
 	
 	@FXML // fx:id="userTxtFld"
 	private TextField userTxtFld = new TextField(); // Value injected by FXMLLoader
@@ -55,7 +57,7 @@ public class MainServerGUI extends Application {
     	
 		try {			
 			MainServer mainServer = new MainServer(Integer.parseInt(port));
-			mainServer.setServerCon(userName, password, port);
+			mainServer.setServerCon(userName, password);
 			((Node)event.getSource()).getScene().getWindow().hide(); //hiding primary window		
 		} catch (NumberFormatException | IOException e) {
 			// TODO Auto-generated catch block
@@ -76,14 +78,21 @@ public class MainServerGUI extends Application {
 		primaryStage.getIcons().add(new Image("/server_earth.png"));
 		primaryStage.setScene(scene);
     	primaryStage.show();
-
-    	
-
-		
+	}
+	
+	private void setValues(){
+		userTxtFld.setText("root");
+		pswrdTxtFld.setText("12345");
+		portTxtFld.setText("5555");
 	}
 	
 	public static void main(String[] args) {
 		launch(args);
 		
+	}
+
+	@Override
+	public void initialize(URL arg0, ResourceBundle arg1) {
+		setValues();
 	}
 }

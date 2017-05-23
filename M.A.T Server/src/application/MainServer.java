@@ -11,12 +11,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import ocsf.server.*;
+import java.util.Date;
 
 
 
@@ -38,9 +38,8 @@ public class MainServer extends AbstractServer
    * The default port to listen on.
    */
   final public static int DEFAULT_PORT = 5555;
-  LogController logController;
-  Connection DBConn;
-  
+  private LogController logController;
+  private Connection DBConn;
   //Constructors ****************************************************
   
   /**
@@ -50,7 +49,7 @@ public class MainServer extends AbstractServer
    */
   public MainServer(int port) 
   {
-    super(port);
+	  super(port);
   }
 
   
@@ -86,41 +85,87 @@ public class MainServer extends AbstractServer
   }
   
   private void login(HashMap<String, String> clientMsg, ConnectionToClient client) {
-	String id, password,school;
+	String id, password, school;
 	Statement stmt;
 	HashMap<String, String> serverMsg = new HashMap<String, String>();
 	
 	
 	id = clientMsg.get("id");
 	password = clientMsg.get("passwrd");
-	school = clientMsg.get(clientMsg.get("schoolId"));
+	school = clientMsg.get("schoolId");
 	
 	
 	
-	String query = "select Name, Role, isLogin from users where ID='" + id + "' AND Password = '" + password +"';";
+	String query = "select * from users where ID='" + id + "';";
 	
-	try {
-		stmt = DBConn.createStatement();
-		ResultSet result = stmt.executeQuery(query);
-		if(result.next()){
-			if(!result.getBoolean(3)){
-				serverMsg.put("Valid", "true");
-				serverMsg.put("Type", result.getString(2));
-				serverMsg.put("Name", result.getString(1));
-				
+	if(school.equals("MAT")){
+		try {
+			stmt = DBConn.createStatement();
+			ResultSet result = stmt.executeQuery(query);
+			if(result.next()){
+				if(!result.getBoolean(7)){
+					if(result.getString(3).equals(password)){
+						if(!result.getBoolean(5)){
+							serverMsg.put("Valid", "true");
+							serverMsg.put("Type", result.getString(4));
+							serverMsg.put("Name", result.getString(2));
+							stmt.executeUpdate("UPDATE users SET isLogin = 1 WHERE id = '" + id + "';");
+						}else{
+							serverMsg.put("Valid", "false");
+							serverMsg.put("ErrMsg", "User allready loged in.");
+						}
+					}else{
+						int tryNum = result.getInt(6);
+						if(tryNum >= 2){
+							stmt.executeUpdate("UPDATE users SET isBlocked = 1, lastLogin = now() WHERE id = '" + id + "';");
+							serverMsg.put("Valid", "false");
+							serverMsg.put("ErrMsg", "User is blocked, try agian in 30 minutes.");
+						}else{
+							serverMsg.put("Valid", "false");
+							serverMsg.put("ErrMsg", "Password or ID is incorrect.");
+						}
+						stmt.executeUpdate("UPDATE users SET numoftries = numoftries + 1 WHERE id = '" + id + "';");
+					}
+				}else{	
+					Date date;
+					Timestamp timestamp = result.getTimestamp(8);
+					date = new java.util.Date(timestamp.getTime());
+					Date now = new Date();
+					long diff = now.getTime() - date.getTime();
+					if(diff > 1000*60*30){
+						stmt.executeUpdate("UPDATE users SET isBlocked = 0, numoftries = 0 WHERE id = '" + id + "';");
+						if(result.getString(3).equals(password)){
+							serverMsg.put("Valid", "true");
+							serverMsg.put("Type", result.getString(4));
+							serverMsg.put("Name", result.getString(2));
+							stmt.executeUpdate("UPDATE users SET isLogin = 1 WHERE id = '" + id + "';");
+						}else{
+							stmt.executeUpdate("UPDATE users SET numoftries = numoftries + 1 WHERE id = '" + id + "';");
+							serverMsg.put("Valid", "false");
+							serverMsg.put("ErrMsg", "Password or ID is incorrect.");
+						}
+					}else{
+						serverMsg.put("Valid", "false");
+						serverMsg.put("ErrMsg", "User is blocked, try agian in " + (30 - (diff / (1000 * 60))) + " minutes.");
+					}
+				}
 			}else{
 				serverMsg.put("Valid", "false");
-				serverMsg.put("ErrMsg", "User allready loged in.");
+				serverMsg.put("ErrMsg", "Password or ID is incorrect.");
 			}
-		}else{
-			serverMsg.put("Valid", "false");
-			serverMsg.put("ErrMsg", "Password or ID is incorrect.");
-		}
-		client.sendToClient(serverMsg);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}else{
+		serverMsg.put("Valid", "false");
+		serverMsg.put("ErrMsg", "School is not found.");
+	}
+	try{
+	client.sendToClient(serverMsg);
+	logController.showMsg("Message sent to client: " + client);
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
 }
   
   private void selectQuery(HashMap<String, String> clientMsg, ConnectionToClient client){
@@ -152,6 +197,7 @@ public class MainServer extends AbstractServer
 	  // return the result to client
 	  try {		  
 		  client.sendToClient(arrayList);
+		  logController.showMsg("Message sent to client: " + client);
 	  } catch (IOException e) {
 		  logController.showMsg("\nCould not sent message to client.");
 	  }
@@ -164,6 +210,7 @@ public class MainServer extends AbstractServer
   		stmt = DBConn.createStatement();
   		int result = stmt.executeUpdate(clientMsg.get("query"));
 			client.sendToClient(result);
+			logController.showMsg("Message sent to client: " + client);
 		} catch (Exception e) {
 			logController.showMsg("ERROR: server could not execute the query");
 			e.printStackTrace();
@@ -210,11 +257,10 @@ public class MainServer extends AbstractServer
    *          if no argument is entered.
  * @throws IOException 
    */
-  public void setServerCon(String user, String password, String portStr) throws IOException
+  public void setServerCon(String user, String password) throws IOException
   {
     //open log events controller
   	openLogEventGUI();
-    
     try 
 	{
         Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -261,7 +307,6 @@ public class MainServer extends AbstractServer
 	  	  	primaryStage.setScene(scene);	
 	  	  	primaryStage.show();
 	  	} catch (IOException e) {
-	  		// TODO Auto-generated catch block
 	  		e.printStackTrace();
 	  	}
   }
