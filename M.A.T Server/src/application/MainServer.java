@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -98,25 +99,34 @@ public class MainServer extends AbstractServer
 	
 	String query = "select * from users where ID='" + id + "';";
 	
+	//checks if selected school MAT
 	if(school.equals("MAT")){
 		try {
 			stmt = DBConn.createStatement();
 			ResultSet result = stmt.executeQuery(query);
+			
 			if(result.next()){
+				//if user found
 				if(!result.getBoolean(7)){
+					//if user is not blocked
 					if(result.getString(3).equals(password)){
+						//if password is vlaid
 						if(!result.getBoolean(5)){
+							//if user is not logged in
 							serverMsg.put("Valid", "true");
 							serverMsg.put("Type", result.getString(4));
 							serverMsg.put("Name", result.getString(2));
 							stmt.executeUpdate("UPDATE users SET isLogin = 1 WHERE id = '" + id + "';");
 						}else{
+							//user is already logged in
 							serverMsg.put("Valid", "false");
-							serverMsg.put("ErrMsg", "User allready loged in.");
+							serverMsg.put("ErrMsg", "User already loged in.");
 						}
 					}else{
+						// user password is wrong
 						int tryNum = result.getInt(6);
 						if(tryNum >= 2){
+							//user entered wrong password 3 times
 							stmt.executeUpdate("UPDATE users SET isBlocked = 1, lastLogin = now() WHERE id = '" + id + "';");
 							serverMsg.put("Valid", "false");
 							serverMsg.put("ErrMsg", "User is blocked, try agian in 30 minutes.");
@@ -124,39 +134,48 @@ public class MainServer extends AbstractServer
 							serverMsg.put("Valid", "false");
 							serverMsg.put("ErrMsg", "Password or ID is incorrect.");
 						}
+						//increment number of wrong password in DB
 						stmt.executeUpdate("UPDATE users SET numoftries = numoftries + 1 WHERE id = '" + id + "';");
 					}
-				}else{	
+				}else{
+					//user was blocked
 					Date date;
 					Timestamp timestamp = result.getTimestamp(8);
 					date = new java.util.Date(timestamp.getTime());
 					Date now = new Date();
 					long diff = now.getTime() - date.getTime();
 					if(diff > 1000*60*30){
+						//if 30 minutes has passed reset block
 						stmt.executeUpdate("UPDATE users SET isBlocked = 0, numoftries = 0 WHERE id = '" + id + "';");
 						if(result.getString(3).equals(password)){
+							//user password is valid, gives the client permeation to log in
 							serverMsg.put("Valid", "true");
 							serverMsg.put("Type", result.getString(4));
 							serverMsg.put("Name", result.getString(2));
 							stmt.executeUpdate("UPDATE users SET isLogin = 1 WHERE id = '" + id + "';");
 						}else{
+							//user password is wrong
 							stmt.executeUpdate("UPDATE users SET numoftries = numoftries + 1 WHERE id = '" + id + "';");
 							serverMsg.put("Valid", "false");
 							serverMsg.put("ErrMsg", "Password or ID is incorrect.");
 						}
 					}else{
+						//user is still blocked
 						serverMsg.put("Valid", "false");
 						serverMsg.put("ErrMsg", "User is blocked, try agian in " + (30 - (diff / (1000 * 60))) + " minutes.");
 					}
 				}
 			}else{
+				//user id was not found
 				serverMsg.put("Valid", "false");
 				serverMsg.put("ErrMsg", "Password or ID is incorrect.");
 			}
 		} catch (Exception e) {
+			logController.showMsg("ERROR: server could not execute the query");
 			e.printStackTrace();
 		}
 	}else{
+		//school is not found
 		serverMsg.put("Valid", "false");
 		serverMsg.put("ErrMsg", "School is not found.");
 	}
@@ -164,6 +183,7 @@ public class MainServer extends AbstractServer
 	client.sendToClient(serverMsg);
 	logController.showMsg("Message sent to client: " + client);
 	} catch (Exception e) {
+		logController.showMsg("ERROR: server failed to send message to client");
 		e.printStackTrace();
 	}
 }
@@ -191,7 +211,7 @@ public class MainServer extends AbstractServer
 				}
 		} catch (Exception e) {
 			logController.showMsg("ERROR: server could not execute the query");
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 	  
 	  // return the result to client
@@ -199,7 +219,8 @@ public class MainServer extends AbstractServer
 		  client.sendToClient(arrayList);
 		  logController.showMsg("Message sent to client: " + client);
 	  } catch (IOException e) {
-		  logController.showMsg("\nCould not sent message to client.");
+		  logController.showMsg("ERROR: server failed to send message to client");
+		  e.printStackTrace();
 	  }
   }
   
