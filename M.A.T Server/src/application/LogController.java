@@ -21,9 +21,13 @@ public class LogController {
     @FXML // fx:id="serverIp"
     private Label serverIp; // Value injected by FXMLLoader
     
-    public void setIp(){
+    @FXML // fx:id="portLbl"
+    private Label portLbl; // Value injected by FXMLLoader
+    
+    public void setIp(int portNum){
     	try {
 			serverIp.setText("Server ip: " + Inet4Address.getLocalHost().getHostAddress());
+			portLbl.setText("Port: " + portNum);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

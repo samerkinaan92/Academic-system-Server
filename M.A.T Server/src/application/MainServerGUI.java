@@ -58,7 +58,7 @@ public class MainServerGUI extends Application implements Initializable {
 		try {			
 			MainServer mainServer = new MainServer(Integer.parseInt(port));
 			mainServer.setServerCon(userName, password);
-			((Node)event.getSource()).getScene().getWindow().hide(); //hiding primary window		
+			((Node)event.getSource()).getScene().getWindow().hide(); //hiding login window		
 		} catch (NumberFormatException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -81,6 +81,7 @@ public class MainServerGUI extends Application implements Initializable {
 	}
 	
 	private void setValues(){
+		//initialize the login values for 
 		userTxtFld.setText("root");
 		pswrdTxtFld.setText("12345");
 		portTxtFld.setText("5555");

@@ -11,5 +11,6 @@
       <Label layoutX="12.0" layoutY="23.0" text="Server log" />
       <Button fx:id="exitBtn" layoutX="177.0" layoutY="359.0" mnemonicParsing="false" onAction="#exit" text="Exit" />
       <Label fx:id="serverIp" layoutX="12.0" layoutY="6.0" text="Server ip: " />
+      <Label fx:id="portLbl" layoutX="163.0" layoutY="6.0" text="Port:" />
    </children>
 </AnchorPane>

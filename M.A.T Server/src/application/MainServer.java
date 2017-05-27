@@ -11,6 +11,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.swing.JOptionPane;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -65,7 +67,8 @@ public class MainServer extends AbstractServer
   public void handleMessageFromClient(Object msg, ConnectionToClient client){
 	  
 	  
-  	HashMap<String, String> clientMsg = (HashMap<String, String>) msg;
+  	@SuppressWarnings("unchecked")
+	HashMap<String, String> clientMsg = (HashMap<String, String>) msg;
   
   	// shows the received msg to the event log
   	logController.showMsg("Message received: " + clientMsg.get("msgType") + " from " + client);
@@ -295,9 +298,10 @@ public class MainServer extends AbstractServer
         logController.showMsg("SQL connection succeed");
     }catch (SQLException ex) 
 	    {/* handle any errors*/
-        logController.showMsg("SQLException: " + ex.getMessage());
-        logController.showMsg("SQLState: " + ex.getSQLState());
-        logController.showMsg("VendorError: " + ex.getErrorCode());
+    	logController.showMsg("SQL connection failed");
+        System.out.println("SQLException: " + ex.getMessage());
+        System.out.println("SQLState: " + ex.getSQLState());
+        System.out.println("VendorError: " + ex.getErrorCode());
         }
     
     try 
@@ -324,10 +328,12 @@ public class MainServer extends AbstractServer
 	  	  	scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 	  	  	
 	  	  	logController = loader.getController();
-	  	  	logController.setIp();
+	  	  	logController.setIp(getPort());
 	  	  	primaryStage.setScene(scene);	
 	  	  	primaryStage.show();
 	  	} catch (IOException e) {
+	  		JOptionPane.showMessageDialog(null, 
+					  "Failed to open log view!", "ERROR", JOptionPane.ERROR_MESSAGE);
 	  		e.printStackTrace();
 	  	}
   }
