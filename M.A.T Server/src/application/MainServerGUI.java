@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javax.swing.JOptionPane;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,6 +41,9 @@ public class MainServerGUI extends Application implements Initializable {
     
     @FXML // fx:id="errorMsgLbl"
     private Label errorMsgLbl; // Value injected by FXMLLoader
+    
+    @FXML // fx:id="sqlPortTxt"
+    private TextField sqlPortTxt; // Value injected by FXMLLoader
 
     @FXML
     void cancel(ActionEvent event) {
@@ -47,20 +52,21 @@ public class MainServerGUI extends Application implements Initializable {
 
     @FXML
     void login(ActionEvent event) {
-    	String userName, password, port;
+    	String userName, password, port, sqlPort;
     	
     	
     	userName = userTxtFld.getText();
     	password = pswrdTxtFld.getText();
     	port = portTxtFld.getText();
+    	sqlPort = sqlPortTxt.getText();
     	 	
     	
 		try {			
 			MainServer mainServer = new MainServer(Integer.parseInt(port));
-			mainServer.setServerCon(userName, password);
+			mainServer.setServerCon(userName, password, Integer.parseInt(sqlPort));
 			((Node)event.getSource()).getScene().getWindow().hide(); //hiding login window		
 		} catch (NumberFormatException | IOException e) {
-			// TODO Auto-generated catch block
+			errorMsgLbl.setText("Syntex error! Please enter an intger in ports");
 			e.printStackTrace();
 		}
 
@@ -85,6 +91,7 @@ public class MainServerGUI extends Application implements Initializable {
 		userTxtFld.setText("root");
 		pswrdTxtFld.setText("12345");
 		portTxtFld.setText("5555");
+		sqlPortTxt.setText("3306");
 	}
 	
 	public static void main(String[] args) {

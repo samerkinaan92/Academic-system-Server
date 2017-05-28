@@ -281,7 +281,7 @@ public class MainServer extends AbstractServer
    *          if no argument is entered.
  * @throws IOException 
    */
-  public void setServerCon(String user, String password) throws IOException
+  public void setServerCon(String user, String password, int sqlPort) throws IOException
   {
     //open log events controller
   	openLogEventGUI();
@@ -294,7 +294,8 @@ public class MainServer extends AbstractServer
   	//connect to DB
     try 
     {
-        DBConn = DriverManager.getConnection("jdbc:mysql://localhost/mat",user,password);
+    	String driverPath = "jdbc:mysql://localhost:" + sqlPort + "/mat";
+        DBConn = DriverManager.getConnection(driverPath,user,password);
         logController.showMsg("SQL connection succeed");
     }catch (SQLException ex) 
 	    {/* handle any errors*/
