@@ -71,7 +71,12 @@ public class MainServer extends AbstractServer
   		
   		if(msg instanceof byte[]){
   			byte byteArray[] = (byte[])msg;
-  			saveFile(byteArray, client);
+  			try {
+				saveFile(byteArray, client);
+			} catch (IOException e) {
+				logController.showMsg("Error: unable to send message to client.");
+				e.printStackTrace();
+			}
   		}else if(msg instanceof HashMap<?, ?>){
 		  	@SuppressWarnings("unchecked")
 			HashMap<String, String> clientMsg = (HashMap<String, String>) msg;
@@ -117,7 +122,7 @@ public class MainServer extends AbstractServer
   		}
 	}
   	
-  	private void saveFile(byte byteArray[], ConnectionToClient client){
+  	private void saveFile(byte byteArray[], ConnectionToClient client) throws IOException{
   		logController.showMsg("bytes recieved from: " + client);
   		FileInfo info = null;
   		
@@ -139,11 +144,14 @@ public class MainServer extends AbstractServer
 				stream.write(byteArray);
 				stream.close();
 				logController.showMsg("File was saved successfully.");
+				client.sendToClient(path + info.getFileName());
 			} catch (IOException e) {
 				logController.showMsg("Error: unable to save file.");
+				client.sendToClient(null);
 				e.printStackTrace();
 			}
   		}else{
+  			client.sendToClient(null);
   			logController.showMsg("Error: unable to find file info.");
   		}
   	}
