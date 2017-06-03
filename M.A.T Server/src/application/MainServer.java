@@ -43,6 +43,9 @@ public class MainServer extends AbstractServer
   final public static int DEFAULT_PORT = 5555;
   private LogController logController;
   private Connection DBConn;
+  private String assFilesDirPath = "C:\\M.A.T files\\assignments\\";
+  private String subFilesDirPath = "C:\\M.A.T files\\submissions\\";
+  private ArrayList<FileInfo> fileToBeSent = new ArrayList<>();
   //Constructors ****************************************************
   
   /**
@@ -56,37 +59,94 @@ public class MainServer extends AbstractServer
   }
 
   
-  //Instance methods ************************************************
+  	//Instance methods ************************************************
   
-  /**
-   * This method handles any messages received from the client.
-   *
-   * @param msg The message received from the client.
-   * @param client The connection from which the message originated.
-   */
-  public void handleMessageFromClient(Object msg, ConnectionToClient client){
-	  
-	  
-  	@SuppressWarnings("unchecked")
-	HashMap<String, String> clientMsg = (HashMap<String, String>) msg;
-  
-  	// shows the received msg to the event log
-  	logController.showMsg("Message received: " + clientMsg.get("msgType") + " from " + client);
-
-  
-  	//check the msg type
-  	if(clientMsg.get("msgType").equals("Login")){
-		login(clientMsg,client);
-  	}else if(clientMsg.get("msgType").equals("select")){
-		selectQuery(clientMsg, client);
-	}else if(clientMsg.get("msgType").equals("update")){
-		updateQuery(clientMsg, client);
-	}else if(clientMsg.get("msgType").equals("delete")){
-		updateQuery(clientMsg, client);
-	}else if(clientMsg.get("msgType").equals("insert")){
-		updateQuery(clientMsg, client);
+  	/**
+   	* This method handles any messages received from the client.
+   	*
+   	* @param msg The message received from the client.
+   	* @param client The connection from which the message originated.
+   	*/
+  	public void handleMessageFromClient(Object msg, ConnectionToClient client){
+  		
+  		if(msg instanceof byte[]){
+  			byte byteArray[] = (byte[])msg;
+  			saveFile(byteArray, client);
+  		}else if(msg instanceof HashMap<?, ?>){
+		  	@SuppressWarnings("unchecked")
+			HashMap<String, String> clientMsg = (HashMap<String, String>) msg;
+		  
+		  	// shows the received msg to the event log
+		  	logController.showMsg("Message received: " + clientMsg.get("msgType") + " from " + client);
+		
+		  
+		  	//check the msg type
+		  	if(clientMsg.get("msgType").equals("Login")){
+				login(clientMsg,client);
+		  	}else if(clientMsg.get("msgType").equals("select")){
+				selectQuery(clientMsg, client);
+			}else if(clientMsg.get("msgType").equals("update")){
+				updateQuery(clientMsg, client);
+			}else if(clientMsg.get("msgType").equals("delete")){
+				updateQuery(clientMsg, client);
+			}else if(clientMsg.get("msgType").equals("insert")){
+				updateQuery(clientMsg, client);
+			}else if(clientMsg.get("msgType").equals("fileInfo")){
+				try {
+					saveFileInfo(clientMsg, client);
+				} catch (IOException e) {
+					logController.showMsg("Error: unable to send message to client.");
+					e.printStackTrace();
+				}
+			}
+  		}
+  	}
+  	
+  	private void saveFileInfo(HashMap<String, String> clientMsg, ConnectionToClient client) throws IOException {
+  		if(clientMsg.get("dir").equals("assignment")){
+  			fileToBeSent.add(new FileInfo(1, clientMsg.get("fileName"), client));
+			client.sendToClient(true);
+			logController.showMsg("File info was saved.");
+  		}else if(clientMsg.get("dir").equals("submission")){
+  			fileToBeSent.add(new FileInfo(2, clientMsg.get("fileName"), client));
+			client.sendToClient(true);
+			logController.showMsg("File info was saved.");
+  		}else{
+  			client.sendToClient(false);
+			logController.showMsg("Error: failed to save file info");
+  		}
 	}
-  }
+  	
+  	private void saveFile(byte byteArray[], ConnectionToClient client){
+  		logController.showMsg("bytes recieved from: " + client);
+  		FileInfo info = null;
+  		
+  		for(int i = 0; i < fileToBeSent.size(); i++){
+  			if(fileToBeSent.get(i).getClient().equals(client))
+  				info = fileToBeSent.get(i);
+  		}
+  		
+  		if(info != null){
+			FileOutputStream stream;
+			String path;
+			if(info.getDir() == 1)
+				path = assFilesDirPath;
+			else
+				path = subFilesDirPath;
+			
+			try {
+				stream = new FileOutputStream(path + info.getFileName());
+				stream.write(byteArray);
+				stream.close();
+				logController.showMsg("File was saved successfully.");
+			} catch (IOException e) {
+				logController.showMsg("Error: unable to save file.");
+				e.printStackTrace();
+			}
+  		}else{
+  			logController.showMsg("Error: unable to find file info.");
+  		}
+  	}
   
   private void login(HashMap<String, String> clientMsg, ConnectionToClient client) {
 	String id, password, school;
@@ -285,6 +345,7 @@ public class MainServer extends AbstractServer
   {
     //open log events controller
   	openLogEventGUI();
+  	setFilesDir();
     try 
 	{
         Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -339,5 +400,25 @@ public class MainServer extends AbstractServer
 	  	}
   }
   
+  private void setFilesDir(){
+	  File assFiles = new File(assFilesDirPath);
+	  File subFiles = new File(subFilesDirPath);
+      if (!assFiles.exists()) {
+          if (assFiles.mkdirs() && subFiles.mkdir()) {
+        	  logController.showMsg("M.A.T files directory was created.");
+          } else {
+        	  logController.showMsg("Failed to create M.A.T files directory!");
+        	  logController.showMsg("Server will shutdown in 5 seconds!!");
+        	  try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				
+			}
+        	  System.exit(0);
+          }
+      }else{
+    	  logController.showMsg("M.A.T files directory already exists.");
+      }
+  }
 }
 //End of MainServer class
