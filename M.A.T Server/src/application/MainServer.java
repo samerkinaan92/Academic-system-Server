@@ -4,6 +4,9 @@ package application;
 // license found at www.lloseng.com 
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -103,8 +106,22 @@ public class MainServer extends AbstractServer
 					logController.showMsg("Error: unable to send message to client.");
 					e.printStackTrace();
 				}
+			}else if(clientMsg.get("msgType").equals("getFile")){
+				getFile(clientMsg, client);
 			}
   		}
+  	}
+  	
+  	private void getFile(HashMap<String, String> clientMsg, ConnectionToClient client){
+  		Path path = Paths.get(clientMsg.get("filePath"));
+  		try {
+			byte[] data = Files.readAllBytes(path);
+			client.sendToClient(data);
+			logController.showMsg("File was sent to client.");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
   	}
   	
   	private void saveFileInfo(HashMap<String, String> clientMsg, ConnectionToClient client) throws IOException {
@@ -123,7 +140,7 @@ public class MainServer extends AbstractServer
 	}
   	
   	private void saveFile(byte byteArray[], ConnectionToClient client) throws IOException{
-  		logController.showMsg("bytes recieved from: " + client);
+  		logController.showMsg("bytes[] recieved from: " + client);
   		FileInfo info = null;
   		
   		for(int i = 0; i < fileToBeSent.size(); i++){
@@ -269,9 +286,9 @@ public class MainServer extends AbstractServer
 			stmt = DBConn.createStatement();
 			ResultSet result = stmt.executeQuery(clientMsg.get("query"));
 			
+			
 			/*Counting the number of columns*/
 		    int numberOfColumns = result.getMetaData().getColumnCount();
-			
 		    
 			    /*Converting resaultSet into arraylist*/
 				while (result.next()) {              
@@ -297,16 +314,23 @@ public class MainServer extends AbstractServer
   
   private void updateQuery(HashMap<String, String> clientMsg, ConnectionToClient client){
 	  Statement stmt;
+	  int result = 0;
 	  //execute the query and return the number of effected rows to client
 	  try {
   		stmt = DBConn.createStatement();
-  		int result = stmt.executeUpdate(clientMsg.get("query"));
-			client.sendToClient(result);
-			logController.showMsg("Message sent to client: " + client);
+  		result = stmt.executeUpdate(clientMsg.get("query"));
 		} catch (Exception e) {
 			logController.showMsg("ERROR: server could not execute the query");
 			e.printStackTrace();
 		}
+	  
+	  try {		  
+		  client.sendToClient(result);
+		  logController.showMsg("Message sent to client: " + client);
+	  } catch (IOException e) {
+		  logController.showMsg("ERROR: server failed to send message to client");
+		  e.printStackTrace();
+	  }
   }
 
     
