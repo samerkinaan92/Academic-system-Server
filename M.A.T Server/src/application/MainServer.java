@@ -30,11 +30,8 @@ import java.util.Date;
  * This class overrides some of the methods in the abstract 
  * superclass in order to give more functionality to the server.
  *
- * @author Dr Timothy C. Lethbridge
- * @author Dr Robert Lagani&egrave;re
- * @author Fran&ccedil;ois B&eacute;langer
- * @author Paul Holden
- * @version July 2000
+ * @author Samer kinaan
+ * @version July 2017
  */
 public class MainServer extends AbstractServer 
 {
@@ -111,19 +108,32 @@ public class MainServer extends AbstractServer
 			}
   		}
   	}
-  	
+
+  	/**
+  	 * sends the requested file to the client
+  	 * 
+  	 * @param clientMsg	The message received from the client.
+  	 * @param client The connection from which the message originated.
+  	 */
   	private void getFile(HashMap<String, String> clientMsg, ConnectionToClient client){
   		Path path = Paths.get(clientMsg.get("filePath"));
   		try {
 			byte[] data = Files.readAllBytes(path);
 			client.sendToClient(data);
-			logController.showMsg("File was sent to client.");
+			logController.showMsg("File was sent to client: " + client);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			logController.showMsg("Failed to send the file to client: " + client);
 			e.printStackTrace();
 		}
   	}
   	
+  	/**
+  	 * saves all the info of the file that will be sent to the server later
+  	 * 
+  	 * @param clientMsg The message received from the client.
+  	 * @param client The connection from which the message originated.
+  	 * @throws IOException
+  	 */
   	private void saveFileInfo(HashMap<String, String> clientMsg, ConnectionToClient client) throws IOException {
   		if(clientMsg.get("dir").equals("assignment")){
   			fileToBeSent.add(new FileInfo(1, clientMsg.get("fileName"), client));
@@ -139,6 +149,14 @@ public class MainServer extends AbstractServer
   		}
 	}
   	
+  	
+  	/**
+  	 * save the sent file in the server hard drive
+  	 * 
+  	 * @param byteArray The byte array containing all the file data
+  	 * @param client The connection from which the message originated.
+  	 * @throws IOException
+  	 */
   	private void saveFile(byte byteArray[], ConnectionToClient client) throws IOException{
   		logController.showMsg("bytes[] recieved from: " + client);
   		FileInfo info = null;
@@ -173,6 +191,15 @@ public class MainServer extends AbstractServer
   		}
   	}
   
+  	
+  	/**
+  	 * login request from client.
+  	 * 
+  	 * @return true if accepted, false else
+  	 * 
+  	 * @param clientMsg The message received from the client.
+  	 * @param client The connection from which the message originated.
+  	 */
   private void login(HashMap<String, String> clientMsg, ConnectionToClient client) {
 	String id, password, school;
 	Statement stmt;
@@ -274,8 +301,13 @@ public class MainServer extends AbstractServer
 		logController.showMsg("ERROR: server failed to send message to client");
 		e.printStackTrace();
 	}
-}
+  }
   
+  /**
+   * @return array list of the data requested by the client 
+   * @param clientMsg The message received from the client.
+   * @param client The connection from which the message originated.
+   */
   private void selectQuery(HashMap<String, String> clientMsg, ConnectionToClient client){
 	  Statement stmt;
 	  
@@ -312,6 +344,12 @@ public class MainServer extends AbstractServer
 	  }
   }
   
+  /**
+   * @return the number of rows affected 
+   * 
+   * @param clientMsg The message received from the client.
+   * @param client The connection from which the message originated.
+   */
   private void updateQuery(HashMap<String, String> clientMsg, ConnectionToClient client){
 	  Statement stmt;
 	  int result = 0;
@@ -353,12 +391,19 @@ public class MainServer extends AbstractServer
       ("Server has stopped listening for connections.");
   }
   
+  /**
+   * This method overrides the one in the superclass.  Called
+   * when the server connects to a client.
+   */
   @Override
   protected void clientConnected(ConnectionToClient client) {
 	  logController.showMsg("Client: " + client + " has connected");
   }
   
-  
+  /**
+   * This method overrides the one in the superclass.  Called
+   * when the server disconnects from a client.
+   */
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
 	  logController.showMsg("Client: " + client + " has been disconnected");
@@ -368,10 +413,11 @@ public class MainServer extends AbstractServer
   /**
    * This method is responsible for the creation of 
    * the server instance (there is no UI in this phase).
-   *
-   * @param args[0] The port number to listen on.  Defaults to 5555 
-   *          if no argument is entered.
- * @throws IOException 
+   * 
+   * @param user User of the DB
+   * @param password Password for the DB
+   * @param sqlPort	The port that mysql is listening on
+   * @throws IOException
    */
   public void setServerCon(String user, String password, int sqlPort) throws IOException
   {
@@ -408,6 +454,9 @@ public class MainServer extends AbstractServer
     }
   }
   
+  /**
+   * open the log event GUI
+   */
   private void openLogEventGUI(){
 	//open log events controller
 	  	try {
@@ -432,6 +481,9 @@ public class MainServer extends AbstractServer
 	  	}
   }
   
+  /**
+   * sets the directory that the file will be saved in 
+   */
   private void setFilesDir(){
 	  File assFiles = new File(assFilesDirPath);
 	  File subFiles = new File(subFilesDirPath);

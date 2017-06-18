@@ -15,6 +15,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 
+
+/**
+ * controller for the server log
+ * @author Samer Kinaan
+ *
+ */
 public class LogController {
 
     @FXML // fx:id="logTxtArea"
@@ -28,9 +34,16 @@ public class LogController {
     
     @FXML // fx:id="portLbl"
     private Label portLbl; // Value injected by FXMLLoader
-    
-    private static int counter = 0;
-    
+
+    /**
+     * counts the number of rows in the text field
+     */
+    private int counter = 0;
+   
+    /**
+     * sets the ip and port number on the log screen
+     * @param portNum 	port number that the server is listening on
+     */
     public void setIp(int portNum){
     	try {
 			serverIp.setText("Server ip: " + Inet4Address.getLocalHost().getHostAddress());
@@ -41,11 +54,19 @@ public class LogController {
 		}
     }
 
+    /**
+     * closes the log controller
+     * @param event
+     */
     @FXML
     void exit(ActionEvent event) {
     	System.exit(0);
     }
     
+    /**
+     * shows a message on the log controller
+     * @param msg message to be displayed
+     */
     public void showMsg(String msg){
     	counter++;
     	long currTime = System.currentTimeMillis();
