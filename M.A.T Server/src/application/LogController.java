@@ -75,13 +75,14 @@ public class LogController {
     	final long currTime = System.currentTimeMillis();
     	final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
     	
+    	//Separate append text to textField into tasks to prevent javafx GUI jam.
     	Task<String> task = new Task<String>() {
             @Override
             public String call() {
                 return "[" + sdf.format(currTime) + "] " + msg + "\n" ; // value to be processed in onSucceeded
             }
         };
-        task.setOnSucceeded(e -> logTxtArea.appendText(task.getValue()));
+        task.setOnSucceeded(event -> logTxtArea.appendText(task.getValue()));
         Thread t = new Thread(task);
         t.start();
     	
@@ -90,7 +91,8 @@ public class LogController {
 				    BufferedWriter bw = new BufferedWriter(fw);
 				    PrintWriter out = new PrintWriter(bw))
 				{
-				    out.println(logTxtArea.getText());
+    				String textAreaText = logTxtArea.getText().replaceAll("\n", System.getProperty("line.separator"));
+    				out.println(textAreaText);
 				    logTxtArea.clear();
 				    counter = 0;
 				    logTxtArea.appendText("Data was exported to log file.\n");
