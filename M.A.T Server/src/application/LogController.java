@@ -9,6 +9,9 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 
+import com.sun.media.jfxmediaimpl.platform.Platform;
+
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -49,7 +52,7 @@ public class LogController {
 			serverIp.setText("Server ip: " + Inet4Address.getLocalHost().getHostAddress());
 			portLbl.setText("Port: " + portNum);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
+			logTxtArea.appendText("Failed to set IP and port fialds");
 			e.printStackTrace();
 		}
     }
@@ -67,11 +70,21 @@ public class LogController {
      * shows a message on the log controller
      * @param msg message to be displayed
      */
-    public void showMsg(String msg){
+    public void showMsg(final String msg){
     	counter++;
-    	long currTime = System.currentTimeMillis();
-    	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-    	logTxtArea.appendText("[" + sdf.format(currTime) + "] " + msg + "\n");
+    	final long currTime = System.currentTimeMillis();
+    	final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+    	
+    	Task<String> task = new Task<String>() {
+            @Override
+            public String call() {
+                return "[" + sdf.format(currTime) + "] " + msg + "\n" ; // value to be processed in onSucceeded
+            }
+        };
+        task.setOnSucceeded(e -> logTxtArea.appendText(task.getValue()));
+        Thread t = new Thread(task);
+        t.start();
+    	
     	if(counter > 100){
     		try(FileWriter fw = new FileWriter("C:\\M.A.T files\\Log file.txt", true);
 				    BufferedWriter bw = new BufferedWriter(fw);
@@ -80,8 +93,11 @@ public class LogController {
 				    out.println(logTxtArea.getText());
 				    logTxtArea.clear();
 				    counter = 0;
+				    logTxtArea.appendText("Data was exported to log file.\n");
 				} catch (IOException e) {
-				    //exception handling left as an exercise for the reader
+					logTxtArea.appendText("Failed to export to log file.\n");
+					counter = 0;
+				    e.printStackTrace();
 				}
     	}
     }
