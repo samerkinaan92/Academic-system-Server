@@ -231,7 +231,7 @@ public class MainServer extends AbstractServer
 							serverMsg.put("Valid", "true");
 							serverMsg.put("Type", result.getString(4));
 							serverMsg.put("Name", result.getString(2));
-							stmt.executeUpdate("UPDATE users SET isLogin = 1 WHERE id = '" + id + "';");
+							stmt.executeUpdate("UPDATE users SET isLogin = 1, numoftries = 0 WHERE id = '" + id + "';");
 						}else{
 							//user is already logged in
 							serverMsg.put("Valid", "false");
