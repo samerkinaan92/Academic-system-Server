@@ -1,7 +1,6 @@
 package application;
 
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,9 +8,7 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 
-import com.sun.media.jfxmediaimpl.platform.Platform;
-
-import javafx.concurrent.Task;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -44,7 +41,7 @@ public class LogController {
     private int counter = 0;
    
     /**
-     * sets the ip and port number on the log screen
+     * sets the IP and port number on the log screen
      * @param portNum 	port number that the server is listening on
      */
     public void setIp(int portNum){
@@ -63,6 +60,15 @@ public class LogController {
      */
     @FXML
     void exit(ActionEvent event) {
+    	try(FileWriter fw = new FileWriter("C:\\M.A.T files\\Log file.txt", true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+				String textAreaText = logTxtArea.getText().replaceAll("\n", System.getProperty("line.separator"));
+				out.println(textAreaText);
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
     	System.exit(0);
     }
     
@@ -72,19 +78,11 @@ public class LogController {
      */
     public void showMsg(final String msg){
     	counter++;
-    	final long currTime = System.currentTimeMillis();
-    	final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-    	
-    	//Separate append text to textField into tasks to prevent javafx GUI jam.
-    	Task<String> task = new Task<String>() {
-            @Override
-            public String call() {
-                return "[" + sdf.format(currTime) + "] " + msg + "\n" ; // value to be processed in onSucceeded
-            }
-        };
-        task.setOnSucceeded(event -> logTxtArea.appendText(task.getValue()));
-        Thread t = new Thread(task);
-        t.start();
+    	long currTime = System.currentTimeMillis();
+    	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+
+        Platform.runLater(()->logTxtArea.appendText("[" + sdf.format(currTime) + "] " + msg + "\n"));
+        
     	
     	if(counter > 100){
     		try(FileWriter fw = new FileWriter("C:\\M.A.T files\\Log file.txt", true);

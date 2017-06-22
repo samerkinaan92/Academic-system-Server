@@ -473,6 +473,7 @@ public class MainServer extends AbstractServer
 	  	  	logController = loader.getController();
 	  	  	logController.setIp(getPort());
 	  	  	primaryStage.setScene(scene);	
+	  	  	primaryStage.setResizable(false);
 	  	  	primaryStage.show();
 	  	} catch (IOException e) {
 	  		JOptionPane.showMessageDialog(null, 
