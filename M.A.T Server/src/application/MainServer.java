@@ -215,7 +215,7 @@ public class MainServer extends AbstractServer
 	String query = "select * from users where ID='" + id + "';";
 	
 	//checks if selected school MAT
-	if(school.equals("MAT")){
+	if(school.equals("Ort Braude")){
 		try {
 			stmt = DBConn.createStatement();
 			ResultSet result = stmt.executeQuery(query);
@@ -292,7 +292,7 @@ public class MainServer extends AbstractServer
 	}else{
 		//school is not found
 		serverMsg.put("Valid", "false");
-		serverMsg.put("ErrMsg", "School is not found.");
+		serverMsg.put("ErrMsg", "School is not found, please contact your system admin.");
 	}
 	try{
 	client.sendToClient(serverMsg);
