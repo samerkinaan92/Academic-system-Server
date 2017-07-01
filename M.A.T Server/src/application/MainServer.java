@@ -5,6 +5,7 @@ package application;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -100,11 +101,16 @@ public class MainServer extends AbstractServer
 				try {
 					saveFileInfo(clientMsg, client);
 				} catch (IOException e) {
-					logController.showMsg("Error: unable to send message to client.");
+					logController.showMsg("Error: unable to send message to client: " + client);
 					e.printStackTrace();
 				}
 			}else if(clientMsg.get("msgType").equals("getFile")){
-				getFile(clientMsg, client);
+				try {
+					getFile(clientMsg, client);
+				} catch (IOException e) {
+					logController.showMsg("Error: unable to send message to client: " + client);
+					e.printStackTrace();
+				}
 			}
   		}
   	}
@@ -114,13 +120,17 @@ public class MainServer extends AbstractServer
   	 * 
   	 * @param clientMsg	The message received from the client.
   	 * @param client The connection from which the message originated.
+  	 * @throws IOException 
   	 */
-  	private void getFile(HashMap<String, String> clientMsg, ConnectionToClient client){
+  	private void getFile(HashMap<String, String> clientMsg, ConnectionToClient client) throws IOException{
   		Path path = Paths.get(clientMsg.get("filePath"));
   		try {
 			byte[] data = Files.readAllBytes(path);
 			client.sendToClient(data);
 			logController.showMsg("File was sent to client: " + client);
+		}catch (NoSuchFileException e) {
+			client.sendToClient(null);
+			logController.showMsg("File from client: " + client + " was not found");
 		} catch (IOException e) {
 			logController.showMsg("Failed to send the file to client: " + client);
 			e.printStackTrace();
