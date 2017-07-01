@@ -17,11 +17,13 @@ import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import ocsf.server.*;
 import java.util.Date;
 
@@ -484,6 +486,11 @@ public class MainServer extends AbstractServer
 	  	  	logController.setIp(getPort());
 	  	  	primaryStage.setScene(scene);	
 	  	  	primaryStage.setResizable(false);
+	  	  	primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+		          public void handle(WindowEvent we) {
+		              logController.exit(null);
+		          }
+		      });
 	  	  	primaryStage.show();
 	  	} catch (IOException e) {
 	  		JOptionPane.showMessageDialog(null, 
